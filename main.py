@@ -1,5 +1,6 @@
 import numpy as np
 
+import sim_rank
 
 def eigenvalue(A, v):
     Av = A.dot(v)
@@ -27,7 +28,7 @@ with open('facebook_combined.txt', 'r') as log_fp:
 logs_tuple = [tuple(log.split(" ")) for log in logs]
 
 w, h = 4039, 4039
-arr = [[0 for x in range(w)] for y in range(h)]
+arr = np.zeros((w, h))
 
 for i in logs_tuple:
     arr[int(i[0])][int(i[1])] = 1
@@ -36,8 +37,11 @@ for i in logs_tuple:
 matr = np.array(arr)
 
 neighbours = np.count_nonzero(matr, axis=0)
-print(neighbours)
 
-def simRank(A, neighbours, C=0.8, iterations=6):
-    ret = np.identity(np.shape(A)[0])
-    return (ret)
+# matr = [[0, 1, 1, 0, 0],
+#         [1, 0, 0, 0, 0],
+#         [1, 0, 0, 1, 0],
+#         [0, 0, 1, 0, 1],
+#         [0, 0, 0, 1, 0]]
+
+print(sim_rank.sim_rank(matr, neighbours))
