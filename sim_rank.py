@@ -26,8 +26,6 @@ def sim_rank(A, neighbours_counts, C=0.8, iterations=6):
                         for j1 in neighbours_indices[k]:
                             tmp_score += old_scores[j1][k1]
                     scores[j][k] = const * tmp_score
-                else:
-                    scores[j][k] = 1
     return scores
 
 
