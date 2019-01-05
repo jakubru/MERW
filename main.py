@@ -1,8 +1,10 @@
 import numpy as np
 
+
 def eigenvalue(A, v):
     Av = A.dot(v)
     return v.dot(Av)
+
 
 def power_iteration(A):
     n, d = A.shape
@@ -32,21 +34,10 @@ for i in logs_tuple:
     arr[int(i[1])][int(i[0])] = 1
 
 matr = np.array(arr)
-#print(power_iteration(matr))
 
-
-neighbours = list()
-for list_ in arr:
-    sum = 0
-    for el in list_:
-        sum += el
-    neighbours.insert(len(neighbours), sum)
-
+neighbours = np.count_nonzero(matr, axis=0)
 print(neighbours)
 
-
-def simRank(A,neighbours, C = 0.8, iterations=6):
+def simRank(A, neighbours, C=0.8, iterations=6):
     ret = np.identity(np.shape(A)[0])
     return (ret)
-
-
