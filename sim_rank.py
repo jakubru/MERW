@@ -1,6 +1,6 @@
 import numpy as np
 import math
-import power_iteration
+from power_iteration import power_iteration
 
 def compute_neighbours(A):
     neighbours_indices = []
