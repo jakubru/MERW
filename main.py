@@ -38,5 +38,11 @@ matr = np.array(arr)
 
 neighbours = np.count_nonzero(matr, axis=0)
 
+matr = np.array([[0, 1, 0, 1, 1],
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [1, 0, 1, 0, 1],
+        [1, 0, 0, 1, 0]])
 
-print(sim_rank.sim_rank(matr, neighbours))
+print(sim_rank.merw_simrank(matr, neighbours))
+
