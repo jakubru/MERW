@@ -30,7 +30,7 @@ def compute_merw_consts(eigenvalue, eigenvector, r, alfa=0.5):
         ret.append(consts)
     return ret
 
-def sim_rank(A, neighbours_counts, C=0.8, iterations=6):
+def simrank(A, neighbours_counts, C=0.8, iterations=6):
     neighbours_indices = compute_neighbours(A)
     scores = np.identity(np.shape(A)[0])
     consts = compute_const(neighbours_counts, len(A), C)
@@ -57,12 +57,12 @@ def merw_simrank(A, iterations=6):
         old_scores = scores.copy()
         for j in range(len(A)):
             for k in range(len(A[j])):
-                if j != k:
+                 if j != k:
                     const = consts[j][k]
                     tmp_score = 0
                     for k1 in neighbours_indices[j]:
                         for j1 in neighbours_indices[k]:
-                            tmp_score += old_scores[j1][k1]/eigenvector[j1][k1]
+                            tmp_score += old_scores[j1][k1]/eigenvector[j1]*eigenvector[k1]
                     scores[j][k] = const * tmp_score
     return scores
 
