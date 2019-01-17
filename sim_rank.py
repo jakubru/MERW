@@ -1,16 +1,7 @@
 import numpy as np
 import math
-from power_iteration import power_iteration
+import power_iteration
 
-def compute_neighbours(A):
-    neighbours_indices = []
-    for row in range(len(A)):
-        neighbours = []
-        for col in range(len(A[row])):
-            if _is_neighbour(A, row, col):
-                neighbours.append(col)
-        neighbours_indices.append(neighbours)
-    return neighbours_indices
 
 def compute_const(neighbours_counts, r, C):
     ret = []
@@ -31,7 +22,7 @@ def compute_merw_consts(eigenvalue, eigenvector, r, alfa=0.5):
     return ret
 
 def simrank(A, neighbours_counts, C=0.8, iterations=6):
-    neighbours_indices = compute_neighbours(A)
+    neighbours_indices = power_iteration.compute_neighbours(A)
     scores = np.identity(np.shape(A)[0])
     consts = compute_const(neighbours_counts, len(A), C)
     for i in range(iterations):
@@ -49,9 +40,9 @@ def simrank(A, neighbours_counts, C=0.8, iterations=6):
 
 
 def merw_simrank(A, iterations=6):
-    neighbours_indices = compute_neighbours(A)
+    neighbours_indices = power_iteration.compute_neighbours(A)
     scores = np.identity(np.shape(A)[0])
-    eigenvalue, eigenvector = power_iteration(A)
+    eigenvalue, eigenvector = power_iteration.power_iteration(A)
     consts = compute_merw_consts(eigenvalue, eigenvector, len(A))
     for i in range(iterations):
         old_scores = scores.copy()
@@ -66,5 +57,3 @@ def merw_simrank(A, iterations=6):
                     scores[j][k] = const * tmp_score
     return scores
 
-def _is_neighbour(A, a, b):
-    return A[a][b]

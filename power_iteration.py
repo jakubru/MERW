@@ -18,3 +18,18 @@ def power_iteration(A):
         v = v_new
         ev = ev_new
     return ev_new, v_new
+
+
+def compute_neighbours(A):
+    neighbours_indices = []
+    for row in range(len(A)):
+        neighbours = []
+        for col in range(len(A[row])):
+            if _is_neighbour(A, row, col):
+                neighbours.append(col)
+        neighbours_indices.append(neighbours)
+    return neighbours_indices
+
+
+def _is_neighbour(A, a, b):
+    return A[a][b]
