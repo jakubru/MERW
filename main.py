@@ -2,6 +2,8 @@ import numpy as np
 
 import sim_rank
 
+import inverse_p_distance
+
 def eigenvalue(A, v):
     Av = A.dot(v)
     return v.dot(Av)
@@ -45,5 +47,5 @@ matr = np.array([
         [1, 0, 1, 0, 1],
         [1, 0, 0, 1, 0]])
 
-print(sim_rank.merw_simrank(matr))
+inverse_p_distance.inverse_p_distance(matr)
 
