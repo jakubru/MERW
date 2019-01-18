@@ -47,5 +47,5 @@ matr = np.array([
         [1, 0, 1, 0, 1],
         [1, 0, 0, 1, 0]])
 
-inverse_p_distance.inverse_p_distance(matr)
+print(inverse_p_distance.inverse_p_distance(matr))
 

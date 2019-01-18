@@ -25,15 +25,15 @@ def inverse_p_distance(A):
             for vertex in neigh_list[u]:
                 k = 0
                 while k < j:
-                    for l in range(len(B[j])):
-                        B[k + 1][vertex] = B[k][l]*P[vertex,u]
+                    print(vertex, u)
+                    B[k + 1][vertex] = B[k][u]*P[vertex, u]
                     k += 1
                 if colors[vertex] == 0:
                     colors[vertex] = 1
                     queue.append(vertex)
             colors[u] = 2
             j+=1
-        print(B)
+        print(np.array(B))
     return np.array(distances)
 
 def merw_inverse_p_distance(A, alfa):
