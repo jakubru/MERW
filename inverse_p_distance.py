@@ -11,13 +11,30 @@ def inverse_p_distance(A):
                 P[i,j] = 1/float(sum_)
         i+=1
     neigh_list = power_iteration.compute_neighbours(A)
-    colors = [0 for _ in range(len(A))]
     queue = list()
+    B = [[0.0 for _ in range(len(A) )] for _ in range(len(A) + 1)]
+    distances = [[0.0 for _ in range(len(A))] for _ in range(len(A))]
     for i in range(len(A)):
+        colors = [0 for _ in range(len(A))]
         queue.append(i)
         colors[i] = 1
+        B[0][i] = 1.0
+        j = 1
         while len(queue) != 0:
-            queue.pop(0)
+            u = queue.pop(0)
+            for vertex in neigh_list[u]:
+                k = 0
+                while k < j:
+                    for l in range(len(B[j])):
+                        B[k + 1][vertex] = B[k][l]*P[vertex,u]
+                    k += 1
+                if colors[vertex] == 0:
+                    colors[vertex] = 1
+                    queue.append(vertex)
+            colors[u] = 2
+            j+=1
+        print(B)
+    return np.array(distances)
 
 def merw_inverse_p_distance(A, alfa):
     ev, v = power_iteration.power_iteration(A)
