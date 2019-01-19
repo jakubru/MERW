@@ -44,10 +44,4 @@ matr = np.array(arr)
 neighbours = np.count_nonzero(matr, axis=0)
 
 
-print(inverse_p_distance.inverse_p_distance(matr))
-
-
-L = laplacians.general_graph_laplacian(matr)
-P = power_iteration.compute_transition_matrix(matr)
-v = power_iteration.compute_stationary_distribution(P)
-print(laplacians.hitting_time(L, v))
+print(sim_rank.simrank(matr))

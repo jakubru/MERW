@@ -4,6 +4,10 @@ import math
 import power_iteration
 
 
+def compute_neighbours_counts(A):
+    return np.count_nonzero(A, axis=0)
+
+
 @numba.jit('float64[:,:](int64, int64, float64)')
 def compute_const(neighbours_counts, r, C):
     ret = []
@@ -26,11 +30,11 @@ def compute_merw_consts(eigenvalue, eigenvector, r, alfa=0.5):
     return ret
 
 
-@numba.jit('float64[:](float64[:,:], int64[:], float64, int64)')
-def simrank(A, neighbours_counts, C=0.8, iterations=6):
+@numba.jit('float64[:](float64[:,:], float64, int64)')
+def simrank(A, C=0.8, iterations=6):
     neighbours_indices = power_iteration.compute_neighbours(A)
     scores = np.identity(np.shape(A)[0])
-    consts = compute_const(neighbours_counts, len(A), C)
+    consts = compute_const(compute_neighbours_counts(A), len(A), C)
     for i in range(iterations):
         old_scores = scores.copy()
         for j in range(len(A)):
