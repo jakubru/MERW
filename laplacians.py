@@ -1,5 +1,6 @@
-import numpy as np
 import numba
+import numpy as np
+
 import power_iteration
 
 
@@ -30,7 +31,7 @@ def hitting_time(L, v):
         for j in range(len(L_[i])):
             h = []
             for k, _ in enumerate(L_):
-                h.append((L_[i, k] + - L_[i, j] - L_[j, k] + L_[j, j]) * v[k])
+                h.append((L_[i, k] - L_[i, j] - L_[j, k] + L_[j, j]) * v[k] * v[k])
             H[i, j] = np.sum(h)
     return H
 
