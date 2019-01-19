@@ -4,6 +4,8 @@ import sim_rank
 
 import inverse_p_distance
 
+import laplacians
+
 def eigenvalue(A, v):
     Av = A.dot(v)
     return v.dot(Av)
@@ -40,12 +42,7 @@ matr = np.array(arr)
 
 neighbours = np.count_nonzero(matr, axis=0)
 
-matr = np.array([
-        [0, 1, 0, 1, 1],
-        [1, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0],
-        [1, 0, 1, 0, 1],
-        [1, 0, 0, 1, 0]])
 
-print(inverse_p_distance.inverse_p_distance(matr))
 
+L = laplacians.general_graph_laplacian(matr)
+print(laplacians.commute_time(L))
