@@ -40,9 +40,19 @@ for i in logs_tuple:
 
 matr = np.array(arr)
 
+# matr = np.array([
+#         [0,1,0,0,0,0,0,0,0,0],
+#         [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+#         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+#         [1,0,0,0,0,0,0,0,0,0]])
+
 neighbours = np.count_nonzero(matr, axis=0)
 
 
-
-L = laplacians.general_graph_laplacian(matr)
-print(laplacians.commute_time(L))
+print(inverse_p_distance.inverse_p_distance(matr))
