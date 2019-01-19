@@ -28,7 +28,6 @@ class LinkPrediction:
         else:
             raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
         preds_idx = np.array(preds_idx)
-
         graph_removed_edges[preds_idx[:, 0], preds_idx[:, 1]] = 1
 
         score = self.score(graph_removed_edges, removed_indices)
@@ -60,42 +59,42 @@ class LinkPrediction:
         n_preds = len(removed_indices)
         preds = ...
         self.save_to_file('laplacians_trw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_laplacians_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = ...
         self.save_to_file('laplacians_merw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_simrank_trw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = sim_rank.simrank(graph_removed_edges)
         self.save_to_file('simrank_trw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_simrank_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = sim_rank.merw_simrank(graph_removed_edges)
         self.save_to_file('simrank_merw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_inv_p_dist_trw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = inverse_p_distance.inverse_p_distance(graph_removed_edges)
         self.save_to_file('inv_p_dist_trw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_inv_p_dist_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = inverse_p_distance.merw_inverse_p_distance(graph_removed_edges)
         self.save_to_file('inv_p_dist_merw', preds)
-        new_edges = _largest_indices(preds, n_preds)
+        new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def score(self, other_graph, removed_indices):
@@ -109,10 +108,12 @@ class LinkPrediction:
         os.mkdir(os.path.join('out', date_str + '_' + time_str))
         np.save(os.path.join('out', date_str + '_' + time_str, filename), results)
 
-
-def _largest_indices(ary, n):
-    """Returns the n largest indices from a numpy array."""
-    flat = ary.flatten()
-    indices = np.argpartition(flat, -n)[-n:]
-    indices = indices[np.argsort(-flat[indices])]
-    return np.column_stack(np.unravel_index(indices, ary.shape))
+    def _largest_indices(self, preds, n):
+        """Returns the n largest indices from a numpy array."""
+        no_edges = np.argwhere(self.graph == 0)
+        no_edges_preds = preds[no_edges[:, 0], no_edges[:, 1]]
+        no_edges_preds = no_edges_preds[np.argwhere(no_edges[:, 0] != no_edges[:, 1])]
+        flat = no_edges_preds.flatten()
+        indices = np.argpartition(flat, -n)[-n:]
+        indices = indices[np.argsort(-flat[indices])]
+        return np.column_stack(np.unravel_index(indices, preds.shape))
