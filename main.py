@@ -2,6 +2,8 @@ import numpy as np
 
 import sim_rank
 
+import power_iteration
+
 import inverse_p_distance
 
 import laplacians
@@ -9,21 +11,6 @@ import laplacians
 def eigenvalue(A, v):
     Av = A.dot(v)
     return v.dot(Av)
-
-
-def power_iteration(A):
-    n, d = A.shape
-    v = np.ones(d) / np.sqrt(d)
-    ev = eigenvalue(A, v)
-    while True:
-        Av = A.dot(v)
-        v_new = Av / np.linalg.norm(Av)
-        ev_new = eigenvalue(A, v_new)
-        if np.abs(ev - ev_new) < 0.01:
-            break
-        v = v_new
-        ev = ev_new
-    return ev_new, v_new
 
 
 with open('facebook_combined.txt', 'r') as log_fp:
@@ -40,6 +27,7 @@ for i in logs_tuple:
 
 matr = np.array(arr)
 
+
 # matr = np.array([
 #         [0,1,0,0,0,0,0,0,0,0],
 #         [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -52,7 +40,14 @@ matr = np.array(arr)
 #         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
 #         [1,0,0,0,0,0,0,0,0,0]])
 
+
 neighbours = np.count_nonzero(matr, axis=0)
 
 
 print(inverse_p_distance.inverse_p_distance(matr))
+
+
+L = laplacians.general_graph_laplacian(matr)
+P = power_iteration.compute_transition_matrix(matr)
+v = power_iteration.compute_stationary_distribution(P)
+print(laplacians.hitting_time(L, v))

@@ -1,11 +1,15 @@
+import numba
+
 import numpy as np
 import scipy
+
 
 def eigenvalue(A, v):
     Av = A.dot(v)
     return v.dot(Av)
 
 
+@numba.jit('UniTuple(float64[:], 2)(float64[:,:])')
 def power_iteration(A):
     n, d = A.shape
     v = np.ones(d) / np.sqrt(d)
@@ -20,7 +24,7 @@ def power_iteration(A):
         ev = ev_new
     return ev_new, v_new
 
-
+@numba.jit('int64[:, :](float64[:, :])')
 def compute_neighbours(A):
     neighbours_indices = []
     for row in range(len(A)):
@@ -36,18 +40,19 @@ def _is_neighbour(A, a, b):
     return A[a][b]
 
 
-
+@numba.jit('float64[:,:](float64[:,:])')
 def compute_transition_matrix(A):
     P = np.zeros(np.shape(A))
     i = 0
     for element in A:
         sum_ = sum(element)
         for j in range(len(element)):
-            if(A[i,j] == 1):
-                P[i,j] = 1/float(sum_)
-        i+=1
+            if A[i, j] == 1:
+                P[i, j] = 1 / float(sum_)
+        i += 1
     return P
 
+
 def compute_stationary_distribution(P):
-    ev,v = power_iteration(P)
-    return v/(sum(v))
+    ev, v = power_iteration(P)
+    return v / (sum(v))
