@@ -1,34 +1,21 @@
 import power_iteration
 import numpy as np
+from math import pow
 
-def inverse_p_distance(A):
+def inverse_p_distance(A, alfa=0.7, depth=5):
     P = power_iteration.compute_transition_matrix(A)
     neigh_list = power_iteration.compute_neighbours(A)
-    queue = list()
-    B = [[0.0 for _ in range(len(A) )] for _ in range(len(A) + 1)]
-    distances = [[0.0 for _ in range(len(A))] for _ in range(len(A))]
-    for i in range(1):
-        colors = [0 for _ in range(len(A))]
-        queue.append(i)
-        colors[i] = 1
-        B[0][i] = 1.0
-        j = 1
-        while len(queue) != 0:
-            u = queue.pop(0)
-            for vertex in neigh_list[u]:
-                if vertex != i:
-                    k = 0
-                    while k < j:
-                        print(k+1, u, vertex)
-                        B[k + 1][vertex] = B[k][u]*P[u, vertex] + B[k + 1][vertex]
-                        print(B)
-                        k += 1
-                if colors[vertex] == 0:
-                    colors[vertex] = 1
-                    queue.append(vertex)
-            colors[u] = 2
-            j+=1
-    return np.array(distances)
+    inverse_p_distances = list()
+    for i in range(len(A)):
+        distances = [[0.0 for _ in range(depth + 1)] for _ in range(len(A))]
+        distances[i][0] = 1.
+        visited = [0 for _ in range(len(neigh_list))]
+        visit_node(neigh_list, i,visited, distances, P, depth)
+        for j in range(len(distances)):
+            for k in range(depth + 1):
+                distances[j][k] *= pow(alfa, k)
+        inverse_p_distances.append([sum(distances[j]) for j in range(len(distances))])
+    return np.array(inverse_p_distances)
 
 def merw_inverse_p_distance(A, alfa):
     ev, v = power_iteration.power_iteration(A)
@@ -37,3 +24,12 @@ def merw_inverse_p_distance(A, alfa):
     matr = alfa*A/ev
     P_d = np.dot(np.dot(matr, np.linalg.inv(D_v)), np.dot(np.linalg.inv(I - matr), D_v ))
     return P_d
+
+
+
+def visit_node(neigh_list, u, visited, distances, P , depth):
+    visited[u] = 1
+    for vertex in neigh_list[u]:
+        if visited[vertex] == 0 and depth > 0:
+            distances[vertex][5 - depth + 1] = distances[u][5 - depth] * P[u, vertex]
+            visit_node(neigh_list, vertex, visited,distances,P, depth -1)
