@@ -1,5 +1,7 @@
-import pandas
 import os
+
+import numpy as np
+import pandas
 
 
 def preprocess_file(path):
@@ -20,7 +22,7 @@ def preprocess_file(path):
             all_edges.replace(vertex, indexes[index], inplace=True)
             index += 1
         prev = vertex
-    return all_edges
+    return np.array(all_edges)
 
 
 if __name__ == '__main__':

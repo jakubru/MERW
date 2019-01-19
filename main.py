@@ -1,12 +1,7 @@
 import numpy as np
 
-import sim_rank
+import link_prediction
 
-import power_iteration
-
-import inverse_p_distance
-
-import laplacians
 
 def eigenvalue(A, v):
     Av = A.dot(v)
@@ -43,5 +38,7 @@ matr = np.array(arr)
 
 neighbours = np.count_nonzero(matr, axis=0)
 
-
-print(sim_rank.simrank(matr))
+l = link_prediction.LinkPrediction(matr, method='inv_p_dist')
+preds, score = l.pred(edges_percent=0.05)
+print(score)
+# print(sim_rank.simrank(matr))
