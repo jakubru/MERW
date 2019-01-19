@@ -1,9 +1,5 @@
 import numpy as np
 
-import laplacians
-import inverse_p_distance
-import sim_rank
-
 
 class LinkPrediction:
 
@@ -25,7 +21,7 @@ class LinkPrediction:
             preds = self._pred_trw(graph_removed_edges, removed_indices)
         else:
             raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
-        score = self.score(preds, removed_indices)
+        score = self.score(sorted(preds), sorted(removed_indices))
         return preds, score
 
     def _pred_merw(self, graph_removed_edges, removed_indices):
