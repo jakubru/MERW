@@ -1,6 +1,8 @@
+import math
+
 import numba
 import numpy as np
-import math
+
 import power_iteration
 
 
@@ -46,6 +48,8 @@ def simrank(A, C=0.8, iterations=6):
                         for j1 in neighbours_indices[k]:
                             tmp_score += old_scores[j1][k1]
                     scores[j][k] = const * tmp_score
+            print("Iteration {}".format(i))
+            print('\t Vertex {}'.format(j))
     return scores
 
 

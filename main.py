@@ -12,15 +12,14 @@ with open('facebook_combined.txt', 'r') as log_fp:
     logs = [log.strip() for log in log_fp.readlines()]
 
 logs_tuple = [tuple(log.split(" ")) for log in logs]
-
+idx = np.array(logs_tuple, dtype=np.int64)
+# print(sorted(logs_tuple, key=lambda x:int(x[0])))
 w, h = 4039, 4039
-arr = np.zeros((w, h))
+matr = np.zeros((w, h), dtype=np.int64)
+matr[idx[:, 0], idx[:, 1]] = 1
+matr[idx[:, 1], idx[:, 0]] = 1
 
-for i in logs_tuple:
-    arr[int(i[0])][int(i[1])] = 1
-    arr[int(i[1])][int(i[0])] = 1
-
-matr = np.array(arr)
+print(matr)
 
 
 # matr = np.array([
@@ -35,7 +34,7 @@ matr = np.array(arr)
 #         [0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
 #         [1, 0, 0, 0, 0, 0, 0, 0, 1, 0]])
 
-neighbours = np.count_nonzero(matr, axis=0)
+# neighbours = np.count_nonzero(matr, axis=0)
 
 # import os
 # l = link_prediction.LinkPrediction(matr)
@@ -43,8 +42,18 @@ neighbours = np.count_nonzero(matr, axis=0)
 # # preds_idx = l._largest_indices(preds, int(0.1 * len(preds)))
 # print(l._largest_indices(preds, int(0.1 * len(preds))))
 
-l = link_prediction.LinkPrediction(matr, method='inv_p_dist')
-edges_percent = 0.05  # random.uniform(0, 0.25)
+# l = link_prediction.LinkPrediction(matr, approach='TRW', method='simrank')
+# edges_percent = 0.01  # random.uniform(0, 0.25)
+# print(f'Removed {edges_percent * 100 }% edges')
+# preds, score = l.pred(edges_percent=edges_percent)
+# print(preds)
+# print(score)
+
+# laplacian_type = 'me' or ' sym_norm_me'
+# metrics = 'hitting_time' or 'commute_time'
+l = link_prediction.LinkPrediction(matr, approach='MERW', method='laplacians', laplacian_type='me',
+                                   metrics='hitting_time')
+edges_percent = 0.01  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
 preds, score = l.pred(edges_percent=edges_percent)
 print(preds)

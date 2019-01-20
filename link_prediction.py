@@ -1,11 +1,14 @@
 import datetime
 import os
+import warnings
 
 import numpy as np
 
 import inverse_p_distance
+import laplacians
 import sim_rank
 
+warnings.filterwarnings('error', message=r'.*?divide by zero.*?')
 
 class LinkPrediction:
 
@@ -16,24 +19,30 @@ class LinkPrediction:
         self.kwargs = kwargs
 
     def pred(self, edges_percent=0.1):
-        edges_idx = np.argwhere(self.graph > 0)
-        edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent/2 * len(edges_idx)))
-        graph_removed_edges = self.graph.copy()
-        removed_indices = edges_idx[edges_to_delete]
-        graph_removed_edges[removed_indices[:, 0], removed_indices[:, 1]] = 0
-        graph_removed_edges[removed_indices[:, 1], removed_indices[:, 0]] = 0
-        if self.approach == 'MERW':
-            preds_idx = self._pred_merw(graph_removed_edges, removed_indices)
-        elif self.approach == 'TRW':
-            preds_idx = self._pred_trw(graph_removed_edges, removed_indices)
-        else:
-            raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
-        preds_idx = np.array(preds_idx)
-        graph_removed_edges[preds_idx[:, 0], preds_idx[:, 1]] = 1
-        graph_removed_edges[preds_idx[:, 1], preds_idx[:, 0]] = 1
-
-        score = self.score(graph_removed_edges, removed_indices)
-        return preds_idx, score
+        retry = 0
+        while True:
+            edges_idx = np.argwhere(self.graph > 0)
+            edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent / 2 * len(edges_idx)))
+            graph_removed_edges = self.graph.copy()
+            removed_indices = edges_idx[edges_to_delete]
+            graph_removed_edges[removed_indices[:, 0], removed_indices[:, 1]] = 0
+            graph_removed_edges[removed_indices[:, 1], removed_indices[:, 0]] = 0
+            print('Retry: {}, det original graph == {}'.format(retry, np.linalg.det(self.graph)))
+            try:
+                if self.approach == 'MERW':
+                    preds_idx = self._pred_merw(graph_removed_edges, removed_indices)
+                elif self.approach == 'TRW':
+                    preds_idx = self._pred_trw(graph_removed_edges, removed_indices)
+                else:
+                    raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
+                preds_idx = np.array(preds_idx)
+                graph_removed_edges[preds_idx[:, 0], preds_idx[:, 1]] = 1
+                graph_removed_edges[preds_idx[:, 1], preds_idx[:, 0]] = 1
+                score = self.score(graph_removed_edges, removed_indices)
+                return preds_idx, score
+            except RuntimeWarning as w:
+                retry += 1
+                print(w)
 
     def _pred_merw(self, graph_removed_edges, removed_indices):
         if self.method == 'laplacians':
@@ -59,14 +68,38 @@ class LinkPrediction:
 
     def _pred_laplacians_trw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
-        preds = ...
+        metrics = self.kwargs.get('metrics', None)
+        L = laplacians.general_graph_laplacian(graph_removed_edges)
+        if metrics == 'hitting_time':
+            preds = laplacians.hitting_time(L)
+        elif metrics == 'commute_time':
+            preds = laplacians.commute_time(L)
+        elif metrics == 'commute_kernel':
+            preds = laplacians.commute_kernel(L)
+        else:
+            raise RuntimeError('Laplacian metrics must be "hitting_time", "commute_kernel" or "commute_time"')
         self.save_to_file('laplacians_trw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
 
     def _pred_laplacians_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
-        preds = ...
+        metrics = self.kwargs.get('metrics', None)
+        laplacian_type = self.kwargs.get('laplacian_type', None)
+        if laplacian_type == 'me':
+            L = laplacians.me_combinatorial_graph_laplacian(graph_removed_edges)
+        elif laplacian_type == 'sym_norm_me':
+            L = laplacians.sym_norm_me_graph_laplacian(graph_removed_edges)
+        else:
+            raise RuntimeError('Laplacian type must be "me" or "sym_norm_me"')
+        if metrics == 'hitting_time':
+            preds = laplacians.hitting_time(L)
+        elif metrics == 'commute_time':
+            preds = laplacians.commute_time(L)
+        elif metrics == 'commute_kernel':
+            preds = laplacians.commute_kernel(L)
+        else:
+            raise RuntimeError('Laplacian metrics must be "hitting_time", "commute_kernel" or "commute_time"')
         self.save_to_file('laplacians_merw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
