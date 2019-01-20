@@ -17,10 +17,12 @@ class LinkPrediction:
 
     def pred(self, edges_percent=0.1):
         edges_idx = np.argwhere(self.graph > 0)
-        edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent * len(edges_idx)))
+        edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent/2 * len(edges_idx)))
         graph_removed_edges = self.graph.copy()
         removed_indices = edges_idx[edges_to_delete]
-        graph_removed_edges[removed_indices[:, 0], removed_indices[:, 1]] = 0
+        for element in removed_indices:
+            graph_removed_edges[element[0], element[1]] = 0
+            graph_removed_edges[element[1], element[0]] = 0
         if self.approach == 'MERW':
             preds_idx = self._pred_merw(graph_removed_edges, removed_indices)
         elif self.approach == 'TRW':
@@ -72,6 +74,8 @@ class LinkPrediction:
     def _pred_simrank_trw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = sim_rank.simrank(graph_removed_edges)
+        for i in range (len(preds)):
+            preds[i,i] = 0.0
         self.save_to_file('simrank_trw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
@@ -79,6 +83,8 @@ class LinkPrediction:
     def _pred_simrank_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = sim_rank.merw_simrank(graph_removed_edges)
+        for i in range (len(preds)):
+            preds[i,i] = 0.0
         self.save_to_file('simrank_merw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
@@ -86,6 +92,8 @@ class LinkPrediction:
     def _pred_inv_p_dist_trw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = inverse_p_distance.inverse_p_distance(graph_removed_edges)
+        for i in range (len(preds)):
+            preds[i,i] = 0.0
         self.save_to_file('inv_p_dist_trw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
@@ -93,6 +101,8 @@ class LinkPrediction:
     def _pred_inv_p_dist_merw(self, graph_removed_edges, removed_indices):
         n_preds = len(removed_indices)
         preds = inverse_p_distance.merw_inverse_p_distance(graph_removed_edges)
+        for i in range(len(preds)):
+            preds[i,i] = 0.0
         self.save_to_file('inv_p_dist_merw', preds)
         new_edges = self._largest_indices(preds, n_preds)
         return new_edges
