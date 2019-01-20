@@ -26,7 +26,7 @@ def merw_inverse_p_distance(A, alfa=0.7):
     D_v = np.diag(v)
     I = np.identity(len(v))
     matr = alfa * A / ev
-    P_d = np.dot(np.dot(matr, np.linalg.pinv(D_v)), np.dot(np.linalg.pinv(I - matr), D_v))
+    P_d = np.dot(np.dot(matr, np.linalg.inv(D_v)), np.dot(np.linalg.inv(I - matr), D_v))
     return P_d
 
 

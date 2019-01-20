@@ -5,7 +5,7 @@ import pandas
 
 
 def preprocess_file(path):
-    df = pandas.read_csv(path, sep=' ', header=None)
+    df = pandas.read_csv(path, sep='\s+', header=None)
     df.columns = ['from', 'to']
     df.sort_values(by=['from', 'to'], inplace=True)
 
