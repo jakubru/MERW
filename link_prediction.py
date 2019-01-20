@@ -20,9 +20,8 @@ class LinkPrediction:
         edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent/2 * len(edges_idx)))
         graph_removed_edges = self.graph.copy()
         removed_indices = edges_idx[edges_to_delete]
-        for element in removed_indices:
-            graph_removed_edges[element[0], element[1]] = 0
-            graph_removed_edges[element[1], element[0]] = 0
+        graph_removed_edges[removed_indices[:, 0], removed_indices[:, 1]] = 0
+        graph_removed_edges[removed_indices[:, 1], removed_indices[:, 0]] = 0
         if self.approach == 'MERW':
             preds_idx = self._pred_merw(graph_removed_edges, removed_indices)
         elif self.approach == 'TRW':
@@ -31,6 +30,7 @@ class LinkPrediction:
             raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
         preds_idx = np.array(preds_idx)
         graph_removed_edges[preds_idx[:, 0], preds_idx[:, 1]] = 1
+        graph_removed_edges[preds_idx[:, 1], preds_idx[:, 0]] = 1
 
         score = self.score(graph_removed_edges, removed_indices)
         return preds_idx, score
