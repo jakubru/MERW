@@ -18,24 +18,25 @@ class LinkPrediction:
 
     def pred(self, edges_percent=0.1):
         while True:
+            edges_idx = np.argwhere(self.graph > 0)
+            edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent / 2 * len(edges_idx)))
+            graph_removed_edges = self.graph.copy()
+            removed_indices = edges_idx[edges_to_delete]
+            sum_row = np.sum(self.graph, axis=1)
+            sum_col = np.sum(self.graph, axis=0)
+            actual_edges = []
+            print(f'Original graph det: {np.linalg.det(self.graph)}')
+            for i, j in removed_indices:
+                if sum_row[i] > 1 and sum_col[j] > 1:
+                    graph_removed_edges[i, j] = 0
+                    graph_removed_edges[j, i] = 0
+                    actual_edges.append([i, j])
+            actual_edges = np.array(actual_edges)
+            print(f'Removed {len(actual_edges)/len(edges_idx)} edges')
+            no_edges_idx = np.argwhere(self.graph == 0)
+            no_edges = np.random.randint(0, len(no_edges_idx), len(actual_edges))
+            no_edges = no_edges_idx[no_edges]
             try:
-                edges_idx = np.argwhere(self.graph > 0)
-                edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent / 2 * len(edges_idx)))
-                graph_removed_edges = self.graph.copy()
-                removed_indices = edges_idx[edges_to_delete]
-                sum_row = np.sum(self.graph, axis=1)
-                sum_col = np.sum(self.graph, axis=0)
-                actual_edges = []
-                print(f'Original graph det: {np.linalg.det(self.graph)}')
-                for i, j in removed_indices:
-                    if sum_row[i] > 1 and sum_col[j] > 1:
-                        graph_removed_edges[i, j] = 0
-                        graph_removed_edges[j, i] = 0
-                        actual_edges.append([i, j])
-                actual_edges = np.array(actual_edges)
-                print(f'Removed {len(actual_edges)/len(edges_idx)} edges')
-                no_edges_idx = np.argwhere(self.graph == 0)
-                no_edges = np.random.randint(0, len(no_edges_idx), len(actual_edges))
                 if self.approach == 'MERW':
                     preds = self._pred_merw(graph_removed_edges)
                 elif self.approach == 'TRW':
@@ -43,11 +44,12 @@ class LinkPrediction:
                 else:
                     raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
                 preds = np.array(preds)
-                score = self.score(preds, actual_edges, no_edges)
-                return preds, score
-            except:
+            except Exception as e:
+                print(e)
                 print('Retrying...')
                 continue
+            score = self.score(preds, actual_edges, no_edges)
+            return preds, score
 
     def _pred_merw(self, graph_removed_edges):
         if self.method == 'laplacians':
@@ -124,6 +126,10 @@ class LinkPrediction:
         return preds
 
     def score(self, preds, actual_edges, no_edges):
+        actual_edges = np.array(actual_edges)
+        no_edges = np.array(no_edges)
+        print(actual_edges)
+        print(no_edges)
         return np.sum(
             preds[actual_edges[:, 0], actual_edges[:, 1]] > preds[no_edges[:, 0], no_edges[:, 1]]
         ) / len(actual_edges)
