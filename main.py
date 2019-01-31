@@ -54,7 +54,7 @@ print(matr)
 
 # laplacian_type = 'me' or ' sym_norm_me'
 # metrics = 'hitting_time' or 'commute_time'
-print('\tSIMRANK TRW')
+print('\tinv_p_dist TRW')
 l = link_prediction.LinkPrediction(matr, approach='TRW', method='inv_p_dist')
 edges_percent = 0.15  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
@@ -63,7 +63,7 @@ print(preds)
 print(score)
 print()
 print()
-print('\tSIMRANK MERW')
+print('\tinv_p_dist MERW')
 l = link_prediction.LinkPrediction(matr, approach='MERW', method='inv_p_dist')
 edges_percent = 0.15  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
