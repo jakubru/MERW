@@ -18,6 +18,9 @@ w, h = 4039, 4039
 matr = np.zeros((w, h), dtype=np.int64)
 matr[idx[:, 0], idx[:, 1]] = 1
 matr[idx[:, 1], idx[:, 0]] = 1
+matr = matr[np.any(matr != 0, axis=0)]
+matr_T = matr.T[np.any(matr != 0, axis=0)]
+matr = matr_T
 
 print(matr)
 
@@ -51,9 +54,8 @@ print(matr)
 
 # laplacian_type = 'me' or ' sym_norm_me'
 # metrics = 'hitting_time' or 'commute_time'
-l = link_prediction.LinkPrediction(matr, approach='MERW', method='laplacians', laplacian_type='me',
-                                   metrics='hitting_time')
-edges_percent = 0.01  # random.uniform(0, 0.25)
+l = link_prediction.LinkPrediction(matr, approach='MERW', method='inv_p_dist')
+edges_percent = 0.05  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
 preds, score = l.pred(edges_percent=edges_percent)
 print(preds)

@@ -1,6 +1,5 @@
 import datetime
 import os
-import warnings
 
 import numpy as np
 
@@ -8,7 +7,6 @@ import inverse_p_distance
 import laplacians
 import sim_rank
 
-warnings.filterwarnings('error', message=r'.*?divide by zero.*?')
 
 class LinkPrediction:
 
@@ -19,55 +17,59 @@ class LinkPrediction:
         self.kwargs = kwargs
 
     def pred(self, edges_percent=0.1):
-        retry = 0
         while True:
-            edges_idx = np.argwhere(self.graph > 0)
-            edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent / 2 * len(edges_idx)))
-            graph_removed_edges = self.graph.copy()
-            removed_indices = edges_idx[edges_to_delete]
-            graph_removed_edges[removed_indices[:, 0], removed_indices[:, 1]] = 0
-            graph_removed_edges[removed_indices[:, 1], removed_indices[:, 0]] = 0
-            print('Retry: {}, det original graph == {}'.format(retry, np.linalg.det(self.graph)))
             try:
+                edges_idx = np.argwhere(self.graph > 0)
+                edges_to_delete = np.random.randint(0, len(edges_idx), int(edges_percent / 2 * len(edges_idx)))
+                graph_removed_edges = self.graph.copy()
+                removed_indices = edges_idx[edges_to_delete]
+                sum_row = np.sum(self.graph, axis=1)
+                sum_col = np.sum(self.graph, axis=0)
+                actual_edges = []
+                print(f'Original graph det: {np.linalg.det(self.graph)}')
+                for i, j in removed_indices:
+                    if sum_row[i] > 1 and sum_col[j] > 1:
+                        graph_removed_edges[i, j] = 0
+                        graph_removed_edges[j, i] = 0
+                        actual_edges.append([i, j])
+                actual_edges = np.array(actual_edges)
+                print(f'Removed {len(actual_edges)/len(edges_idx)} edges')
+                no_edges_idx = np.argwhere(self.graph == 0)
+                no_edges = np.random.randint(0, len(no_edges_idx), len(actual_edges))
                 if self.approach == 'MERW':
-                    preds_idx = self._pred_merw(graph_removed_edges, removed_indices)
+                    preds = self._pred_merw(graph_removed_edges)
                 elif self.approach == 'TRW':
-                    preds_idx = self._pred_trw(graph_removed_edges, removed_indices)
+                    preds = self._pred_trw(graph_removed_edges)
                 else:
                     raise RuntimeError("Link prediction approach must be set to 'MERW' or 'TRW'")
-                preds_idx = np.array(preds_idx)
-                graph_removed_edges[preds_idx[:, 0], preds_idx[:, 1]] = 1
-                graph_removed_edges[preds_idx[:, 1], preds_idx[:, 0]] = 1
-                score = self.score(graph_removed_edges, removed_indices)
-                return preds_idx, score
-            except RuntimeWarning as w:
-                retry += 1
-                print(w)
+                preds = np.array(preds)
+                score = self.score(preds, actual_edges, no_edges)
+                return preds, score
+            except:
+                print('Retrying...')
+                continue
 
-    def _pred_merw(self, graph_removed_edges, removed_indices):
+    def _pred_merw(self, graph_removed_edges):
         if self.method == 'laplacians':
-            raise NotImplementedError
-            # return self._pred_laplacians_merw(graph_removed_edges, removed_indices)
+            return self._pred_laplacians_merw(graph_removed_edges)
         elif self.method == 'simrank':
-            return self._pred_simrank_merw(graph_removed_edges, removed_indices)
+            return self._pred_simrank_merw(graph_removed_edges)
         elif self.method == 'inv_p_dist':
-            return self._pred_inv_p_dist_merw(graph_removed_edges, removed_indices)
+            return self._pred_inv_p_dist_merw(graph_removed_edges)
         else:
             raise RuntimeError("Link prediction method must be set to 'laplacians', 'simrank' or 'inv_p_dist'")
 
-    def _pred_trw(self, graph_removed_edges, removed_indices):
+    def _pred_trw(self, graph_removed_edges):
         if self.method == 'laplacians':
-            raise NotImplementedError
-            # return self._pred_laplacians_trw(graph_removed_edges, removed_indices)
+            return self._pred_laplacians_trw(graph_removed_edges)
         elif self.method == 'simrank':
-            return self._pred_simrank_trw(graph_removed_edges, removed_indices)
+            return self._pred_simrank_trw(graph_removed_edges)
         elif self.method == 'inv_p_dist':
-            return self._pred_inv_p_dist_trw(graph_removed_edges, removed_indices)
+            return self._pred_inv_p_dist_trw(graph_removed_edges)
         else:
             raise RuntimeError("Link prediction method must be set to 'laplacians', 'simrank' or 'inv_p_dist'")
 
-    def _pred_laplacians_trw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_laplacians_trw(self, graph_removed_edges):
         metrics = self.kwargs.get('metrics', None)
         L = laplacians.general_graph_laplacian(graph_removed_edges)
         if metrics == 'hitting_time':
@@ -79,11 +81,9 @@ class LinkPrediction:
         else:
             raise RuntimeError('Laplacian metrics must be "hitting_time", "commute_kernel" or "commute_time"')
         self.save_to_file('laplacians_trw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def _pred_laplacians_merw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_laplacians_merw(self, graph_removed_edges):
         metrics = self.kwargs.get('metrics', None)
         laplacian_type = self.kwargs.get('laplacian_type', None)
         if laplacian_type == 'me':
@@ -101,48 +101,32 @@ class LinkPrediction:
         else:
             raise RuntimeError('Laplacian metrics must be "hitting_time", "commute_kernel" or "commute_time"')
         self.save_to_file('laplacians_merw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def _pred_simrank_trw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_simrank_trw(self, graph_removed_edges):
         preds = sim_rank.simrank(graph_removed_edges)
-        for i in range (len(preds)):
-            preds[i,i] = 0.0
         self.save_to_file('simrank_trw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def _pred_simrank_merw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_simrank_merw(self, graph_removed_edges):
         preds = sim_rank.merw_simrank(graph_removed_edges)
-        for i in range (len(preds)):
-            preds[i,i] = 0.0
         self.save_to_file('simrank_merw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def _pred_inv_p_dist_trw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_inv_p_dist_trw(self, graph_removed_edges):
         preds = inverse_p_distance.inverse_p_distance(graph_removed_edges)
-        for i in range (len(preds)):
-            preds[i,i] = 0.0
         self.save_to_file('inv_p_dist_trw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def _pred_inv_p_dist_merw(self, graph_removed_edges, removed_indices):
-        n_preds = len(removed_indices)
+    def _pred_inv_p_dist_merw(self, graph_removed_edges):
         preds = inverse_p_distance.merw_inverse_p_distance(graph_removed_edges)
-        for i in range(len(preds)):
-            preds[i,i] = 0.0
         self.save_to_file('inv_p_dist_merw', preds)
-        new_edges = self._largest_indices(preds, n_preds)
-        return new_edges
+        return preds
 
-    def score(self, other_graph, removed_indices):
-        expected_edges = other_graph[removed_indices[:, 0], removed_indices[:, 1]]
-        return np.count_nonzero(expected_edges) / len(expected_edges)
+    def score(self, preds, actual_edges, no_edges):
+        return np.sum(
+            preds[actual_edges[:, 0], actual_edges[:, 1]] > preds[no_edges[:, 0], no_edges[:, 1]]
+        ) / len(actual_edges)
 
     def save_to_file(self, filename, results):
         date = datetime.datetime.now()
@@ -150,13 +134,3 @@ class LinkPrediction:
         time_str = '-'.join([str(date.hour), str(date.minute), str(date.second)])
         os.mkdir(os.path.join('out', date_str + '_' + time_str))
         np.save(os.path.join('out', date_str + '_' + time_str, filename), results)
-
-    def _largest_indices(self, preds, n):
-        """Returns the n largest indices from a numpy array."""
-        no_edges = np.argwhere(self.graph == 0)
-        no_edges_preds = preds[no_edges[:, 0], no_edges[:, 1]]
-        no_edges_preds = no_edges_preds[np.argwhere(no_edges[:, 0] != no_edges[:, 1])]
-        flat = no_edges_preds.flatten()
-        indices = np.argpartition(flat, -n)[-n:]
-        indices = indices[np.argsort(-flat[indices])]
-        return np.column_stack(np.unravel_index(indices, preds.shape))
