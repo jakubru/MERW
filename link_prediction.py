@@ -23,18 +23,14 @@ class LinkPrediction:
             graph_removed_edges = self.graph.copy()
             removed_indices = edges_idx[edges_to_delete]
             sum_row = np.sum(self.graph, axis=1)
-            sum_col = np.sum(self.graph, axis=0)
             actual_edges = []
-            print(sum_row)
-            print(f'Original graph det: {np.linalg.det(self.graph)}')
             for i, j in removed_indices:
-                if sum_row[i] > 1 and sum_col[j] > 1:
+                if sum_row[i] > 1 and sum_row[j] > 1:
                     graph_removed_edges[i, j] = 0
                     graph_removed_edges[j, i] = 0
                     actual_edges.append([i, j])
                     sum_row[i] -= 1
-                    sum_col[j] -= 1
-            print(sum_row)
+                    sum_row[j] -= 1
             actual_edges = np.array(actual_edges)
             print(f'Removed {len(actual_edges)/len(edges_idx)} edges')
             no_edges_idx = np.argwhere(self.graph == 0)

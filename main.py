@@ -22,7 +22,6 @@ matr = matr[np.any(matr != 0, axis=0)]
 matr_T = matr.T[np.any(matr != 0, axis=0)]
 matr = matr_T
 
-print(matr)
 
 
 # matr = np.array([
@@ -55,7 +54,7 @@ print(matr)
 # laplacian_type = 'me' or ' sym_norm_me'
 # metrics = 'hitting_time' or 'commute_time'
 print('\tinv_p_dist TRW')
-l = link_prediction.LinkPrediction(matr, approach='TRW', method='simrank')
+l = link_prediction.LinkPrediction(matr, approach='TRW', method='inv_p_dist')
 edges_percent = 0.15  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
 preds, score = l.pred(edges_percent=edges_percent)
@@ -64,7 +63,7 @@ print(score)
 print()
 print()
 print('\tinv_p_dist MERW')
-l = link_prediction.LinkPrediction(matr, approach='MERW', method='simrank')
+l = link_prediction.LinkPrediction(matr, approach='MERW', method='inv_p_dist')
 edges_percent = 0.15  # random.uniform(0, 0.25)
 print(f'Removed {edges_percent * 100 }% edges')
 preds, score = l.pred(edges_percent=edges_percent)
